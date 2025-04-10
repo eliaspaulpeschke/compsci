@@ -1,0 +1,3 @@
+[submodule "coding-interview-university"]
+	path = coding-interview-university
+	url = git@github.com:eliaspaulpeschke/coding-interview-university.git
