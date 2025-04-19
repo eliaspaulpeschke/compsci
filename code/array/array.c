@@ -17,7 +17,7 @@ struct Vector * vectorInitialize(size_t elementSize, uint64_t arr_length, void* 
 
     uint64_t capacity = 16;
     for (int i = 4; i < 32; i++) {
-        if (capacity < arr_length) {
+        if (capacity < (arr_length * 2)) {
             capacity = capacity << 1;
         }
     }
@@ -69,17 +69,11 @@ int vectorPush(struct Vector * v, void * item){
 
 void * vectorPop(struct Vector * v){
     if (v == NULL) return NULL;
-    if (v->count == 0) {
-        printf("count");
-        return NULL;
-    }
+    if (v->count == 0) return NULL;
     if (v->count <= v->capacity / 4 && v->capacity > 16){
         v->capacity = v->capacity / 2;
         v->data = reallocarray(v->data, v->capacity, v->elementSize);
-        if (v->data == NULL){
-            printf("count");
-            return NULL;
-        }
+        if (v->data == NULL) return NULL;
     }
     void * p = vectorAtIndex(v, v->count - 1);
     v->count -= 1;
@@ -104,6 +98,36 @@ int vectorInsert(struct Vector * v, void * item, uint64_t index){
     return 0;
 }
 
+int vectorDelete(struct Vector * v, uint64_t index){
+    if (index >= v->count) return -1;
+    if (v->count <= v->capacity / 4 && v->capacity > 16){
+        v->capacity = v->capacity / 2;
+        v->data = reallocarray(v->data, v->capacity, v->elementSize);
+        if (v->data == NULL) return -1;
+    }
+    uint64_t moveLength = (v->count - index - 1) * v->elementSize;
+    char * offset = v->data + (index * v->elementSize);
+    memmove( offset, offset+v->elementSize, moveLength);
+    v->count -= 1;
+    return 0;
+}
+
+uint64_t vectorFind(struct Vector * v, void * target){
+    if (target == NULL) return -1;
+    char * p = (char *) v->data;
+    for (uint64_t i = 0; i < v->count; i++){
+        if (memcmp((void *) p, target, v->elementSize) == 0) return i;
+        p += v->elementSize;
+    }
+    return -1;
+}
+
+int vectorRemove(struct Vector * v, void * target){
+    uint64_t targetIndex = vectorFind(v, target);
+    if (targetIndex < 0) return targetIndex;
+    return vectorDelete(v, targetIndex);
+}
+
 uint64_t vectorSize(struct Vector * v){
     if (v == NULL) return -1;
     return v->count;
@@ -119,33 +143,6 @@ int vectorIsEmpty(struct Vector * v){
     return (v->count == 0);
 }
 
-
-
-int main(void){
-    uint32_t test[] = {15, 163, UINT32_MAX -5};
-
-    struct Vector * vect = vectorInitialize(sizeof(uint32_t), 3, (void *) test);
-
-    uint32_t el = 15564;
-    uint32_t el2 = 111555;
-
-    vectorPush(vect, &el);
-    vectorInsert(vect, &el2, 2);
-    printf("count: %lu\n", vect->count);
-    uint64_t cnt = vect->count;
-    for (int i = 0; i < cnt; i++){
-        uint32_t * p = (uint32_t *) vectorPop(vect);
-        if (p == NULL) {
-            printf("NULL");
-        }else{
-          printf("num: %u \n", *p);
-        };
-    }
-    printf("\n");
-//    printf(L"%ls \n", vect.data);
-  //  printf("%d \n", vect.capacity);
-  //  printf("%d \n", vect.elementSize);
-
+int vectorPrepend(struct Vector * v, void * item){
+    return vectorInsert(v, item, 0);
 }
-
-
